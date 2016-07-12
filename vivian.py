@@ -3,6 +3,7 @@ from Parser import *
 import telebot
 import random
 import json
+import time
 
 bot = telebot.TeleBot("181718772:AAHJiobdYJvo8iwDqj2h4fovfO8Vn69ZwhA")
 
@@ -42,24 +43,31 @@ def echo_all(message):
     global practiceFlag
     global wordPairs
     global answerIndex
-    bot.reply_to(message, "The answer: "+wordPairs[answerIndex][1])    
-    markup = types.ReplyKeyboardHide()
-    
-    # Practice result
-    if practiceFlag == 1:
-        if judge(message.text) == 1:
-            print "the same"
-            sticker = open('./img/yes.webp', 'rb')
-            bot.send_sticker(message.chat.id, sticker, reply_markup=markup)
-            sticker.close()
+    try:
+        bot.reply_to(message, "The answer: "+wordPairs[answerIndex][1])
+        markup = types.ReplyKeyboardHide()
+            
+        # Practice result
+        if practiceFlag == 1:
+            if judge(message.text) == 1:
+                print "the same"
+                sticker = open('./img/yes.webp', 'rb')
+                bot.send_sticker(message.chat.id, sticker, reply_markup=markup)
+                sticker.close()
+            else:
+                print "differnet"
+                sticker = open('./img/no.webp', 'rb')
+                bot.send_sticker(message.chat.id, sticker, reply_markup=markup)
+                sticker.close()
+            guess(message)
         else:
-            print "differnet"
-            sticker = open('./img/no.webp', 'rb')
-            bot.send_sticker(message.chat.id, sticker, reply_markup=markup)
-            sticker.close()
-        guess(message)
-    else:
-        bot.send_message(message.chat.id, "done.")
+            bot.send_message(message.chat.id, "done.")
+        
+    except TypeError:
+        try:
+            bot.reply_to(message, "TypeError occure...")
+        except TypeError:    
+            pass
     
 # Function define    
 def guess(message):
@@ -108,4 +116,9 @@ if __name__ == '__main__':
     print wordPairs
     
     # Conduct bot
-    bot.polling(none_stop=True)
+    while True:
+        try:
+            bot.polling(none_stop=True)
+        except Exception, e:
+            print "error happen", str(e)
+            time.sleep(1)

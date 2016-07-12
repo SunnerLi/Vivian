@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/layout"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <Button
+            android:id="@+id/ch0"
+            android:text="UK"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:alpha="1"
+            />
+
+        <Button
+            android:id="@+id/ch1"
+            android:text="US"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/ch0"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:alpha="1"
+            />
+
+        <Button
+            android:id="@+id/ch2"
+            android:text="AS"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/ch1"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:alpha="1"
+            />
+
+        <Button
+            android:id="@+id/ch3"
+            android:text="AS"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/ch2"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:alpha="1"
+            />
+
+        <TextView
+            android:id="@+id/ans"
+            android:text="none"
+            android:layout_below="@+id/ch3"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+</LinearLayout>
