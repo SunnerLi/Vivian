@@ -1,9 +1,12 @@
 # Vivian    
 A simple telegram bot that can help you remember the English vocabulary.    
       
-![Packagist](https://github.com/SunnerLi/Vivian/blob/master/img/introduction.png)</br>   
-
-
+        
+<p align="center">
+  <img src="https://github.com/SunnerLi/Vivian/blob/master/Android/Vivian/app/src/main/res/drawable/vivian_icon_small.png"/>
+</p> 
+         
+         
 Abstract    
 ----------------------
 This program would work on telegram. After you are interactive with bot, you would keep choosing the correcting answer of the native meaning. This program is developed under Ubuntu 14.04     
