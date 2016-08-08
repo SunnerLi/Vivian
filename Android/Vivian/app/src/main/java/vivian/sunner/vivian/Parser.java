@@ -30,14 +30,28 @@ public class Parser {
             index[i] = (int) (Math.random() * (en.size()) - 1);
     }
 
+    public int getNumberOfWord(){
+        return en.size();
+    }
+
     // Give the correct english word
     public String getEn(int i) {
         return en.get(index[i]);
     }
 
+    // Get the correct english with the corresponding osition
+    public String getEn_Read(int i){
+        return en.get(i);
+    }
+
     // Give the correct chinese word
     public String getch(int i) {
         return ch.get(index[i]);
+    }
+
+    // Get the correct chinese with the corresponding osition
+    public String getCh_Read(int i){
+        return ch.get(i);
     }
 
     // Testing Function
