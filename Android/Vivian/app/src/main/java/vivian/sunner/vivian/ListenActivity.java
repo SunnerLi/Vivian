@@ -1,6 +1,9 @@
 package vivian.sunner.vivian;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.Message;
 import android.speech.tts.TextToSpeech;
@@ -13,6 +16,7 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import java.io.Serializable;
 import java.util.Locale;
 
 /*
@@ -22,17 +26,28 @@ import java.util.Locale;
 public class ListenActivity extends AppCompatActivity implements TextToSpeech.OnInitListener {
     // Fundemential
     String TAG = "listen";
-    TextToSpeech t;
-    static Parser parser;
+    public static TextToSpeech t;
 
     // Custom Widget
     RollTextViewHandler rollTextViewHandler = new RollTextViewHandler();
-    TextView roll;
+    public TextView roll;
     public Switch ctrl, slow;
 
     // Flag
-    public boolean stopFlag = true;                                                                 // The flag to stop the TTS
     public boolean haveSpeak = false;                                                               // The flag to record if allocate TTS
+
+    // Broadcast Receiver implementation
+    public BroadcastReceiver updateUIReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Show the chinese
+            if (intent.getBundleExtra(Constants.DIR).getInt(Constants.DIRKEY) == Constants.S2A) {
+                rollTextViewHandler.add(intent.getBundleExtra(Constants.TXT).getString(Constants.TXTKEY));
+                Message message = new Message();
+                changeTextHandler.sendMessage(message);
+            }
+        }
+    };
 
     // The handler to update the RollTextView
     Handler changeTextHandler = new Handler() {
@@ -79,8 +94,6 @@ public class ListenActivity extends AppCompatActivity implements TextToSpeech.On
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            parser = new Parser();
-            parser.readFromFile();
             loadView();
         }
     }
@@ -96,75 +109,57 @@ public class ListenActivity extends AppCompatActivity implements TextToSpeech.On
                 slow.setVisibility(View.VISIBLE);
                 haveSpeak = true;
                 if (isChecked) {
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            super.run();
-                            int size = parser.getNumberOfWord();
-
-                            // Determine the direction
-                            boolean reverse = (Math.random() > 0.5 ? true : false);
-                            if (reverse) {
-                                for (int i = 0; i < size && stopFlag == true; i++)
-                                    speakByIndex(i);
-                            } else {
-                                for (int i = size - 1; i > 0 && stopFlag == true; i--)
-                                    speakByIndex(i);
-                            }
-                        }
-                    }.start();
-                } else
-                    stopFlag = false;
+                    Intent intent = new Intent();
+                    intent.setClass(ListenActivity.this, ListenService.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putInt(Constants.DIRKEY, Constants.A2S);
+                    intent.putExtra(Constants.DIR, bundle);
+                    startService(intent);
+                    registerReceiver(updateUIReceiver, new IntentFilter(Constants.LISTEN_FILTER));
+                } else {
+                    Intent intent = new Intent();
+                    intent.setAction(Constants.LISTEN_FILTER);
+                    Bundle bundle = new Bundle();
+                    bundle.putInt(Constants.DIRKEY, Constants.A2S);
+                    intent.putExtra(Constants.DIR, bundle);
+                    Bundle bundle1 = new Bundle();
+                    bundle1.putInt(Constants.CMDKEY, Constants.STOP);
+                    intent.putExtra(Constants.CMD, bundle1);
+                    sendBroadcast(intent);
+                }
             }
         });
         slow.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked)
-                    t.setSpeechRate(0.8f);
-                else
-                    t.setSpeechRate(1);
+                if (isChecked) {
+                    Intent intent = new Intent();
+                    intent.setAction(Constants.LISTEN_FILTER);
+                    Bundle bundle = new Bundle();
+                    bundle.putInt(Constants.DIRKEY, Constants.A2S);
+                    intent.putExtra(Constants.DIR, bundle);
+                    Bundle bundle1 = new Bundle();
+                    bundle1.putInt(Constants.CMDKEY, Constants.SLOW);
+                    intent.putExtra(Constants.CMD, bundle1);
+                    sendBroadcast(intent);
+                } else {
+                    Intent intent = new Intent();
+                    intent.setAction(Constants.LISTEN_FILTER);
+                    Bundle bundle = new Bundle();
+                    bundle.putInt(Constants.DIRKEY, Constants.A2S);
+                    intent.putExtra(Constants.DIR, bundle);
+                    Bundle bundle1 = new Bundle();
+                    bundle1.putInt(Constants.CMDKEY, Constants.NORMAL);
+                    intent.putExtra(Constants.CMD, bundle1);
+                    sendBroadcast(intent);
+                }
             }
         });
-    }
-
-    // Seperate from the main function(Speak)
-    public void speakByIndex(int i) {
-        // Set the language
-        if (i % 5 == 0) {
-            switch ((i / 5) % 3) {
-                case 0:
-                    t.setLanguage(new Locale("en", "GB"));
-                    break;
-                case 1:
-                    t.setLanguage(new Locale("en", "US"));
-                    break;
-                case 2:
-                    t.setLanguage(new Locale("en", "AS"));
-            }
-        }
-
-        // Speak the word
-        t.speak(parser.getEn_Read(i), TextToSpeech.QUEUE_ADD, null);
-
-        // Show the chinese
-        rollTextViewHandler.add(parser.getCh_Read(i));
-        Message message = new Message();
-        changeTextHandler.sendMessage(message);
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        stopFlag = false;
-        if (haveSpeak) {
-            t.stop();
-            t.shutdown();
-        }
+        unregisterReceiver(updateUIReceiver);
     }
 }

@@ -21,6 +21,7 @@ public class Constants {
 
     // Broadcast filter
     public static String SETTING_FILTER = "setting filter";
+    public static String LISTEN_FILTER = "listen filter";
 
     // Setting type
     public final static int OPEN_SPEAKING = 0;
@@ -37,4 +38,21 @@ public class Constants {
     public final static String SHOW_Q_TEST_BUNDLE_KEY = "show quetion test bundle key";
     public final static String SHOW_ANSWER_BUNDLE_KEY = "show answer bundle key";
     public final static String Q_TYPE_BUNDLE_KEY = "question type bundle key";
+
+    // Listen mode intent putExtra keys
+    public final static String DIR = "direction";
+    public final static String CMD = "command";
+    public final static String TXT = "text";
+
+    // Listen mode bundle keys
+    public final static String DIRKEY = "direction key";
+    public final static String CMDKEY = "command key";
+    public final static String TXTKEY = "text key";
+
+    // Listen mode bundle values
+    public final static int A2S = 4;
+    public final static int S2A = 5;
+    public final static int STOP = 6;
+    public final static int SLOW = 7;
+    public final static int NORMAL = 8;
 }
