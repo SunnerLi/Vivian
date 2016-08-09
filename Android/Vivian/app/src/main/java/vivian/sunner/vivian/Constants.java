@@ -40,19 +40,10 @@ public class Constants {
     public final static String Q_TYPE_BUNDLE_KEY = "question type bundle key";
 
     // Listen mode intent putExtra keys
-    public final static String DIR = "direction";
     public final static String CMD = "command";
-    public final static String TXT = "text";
-
-    // Listen mode bundle keys
-    public final static String DIRKEY = "direction key";
-    public final static String CMDKEY = "command key";
-    public final static String TXTKEY = "text key";
 
     // Listen mode bundle values
-    public final static int A2S = 4;
-    public final static int S2A = 5;
-    public final static int STOP = 6;
-    public final static int SLOW = 7;
-    public final static int NORMAL = 8;
+    public final static int STOP = 4;
+    public final static int SLOW = 5;
+    public final static int NORMAL = 6;
 }

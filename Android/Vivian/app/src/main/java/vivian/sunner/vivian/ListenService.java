@@ -7,39 +7,54 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Message;
 import android.speech.tts.TextToSpeech;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.Locale;
 
-public class ListenService extends Service {
+public class ListenService extends Service implements TextToSpeech.OnInitListener {
     static Parser parser;
     public boolean stopFlag = true;                                                                 // The flag to stop the TTS
+    public static TextToSpeech t;
 
     // Broadcast Receiver implementation
     public BroadcastReceiver listenReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            /*
             if (intent.getBundleExtra(Constants.DIR).getInt(Constants.DIRKEY) == Constants.A2S) {
                 switch (intent.getBundleExtra(Constants.CMD).getInt(Constants.CMDKEY)) {
                     case Constants.STOP:
                         stopFlag = false;
                         break;
                     case Constants.SLOW:
-                        ListenActivity.t.setSpeechRate(0.8f);
+                        t.setSpeechRate(0.8f);
                         break;
                     case Constants.NORMAL:
-                        ListenActivity.t.setSpeechRate(1);
+                        t.setSpeechRate(1);
                         break;
                     default:
                         Log.e(Constants.TAG, "異常廣播");
                 }
             }
+            */
+            switch (intent.getExtras().getInt(Constants.CMD)) {
+                case Constants.STOP:
+                    stopFlag = false;
+                    break;
+                case Constants.SLOW:
+                    t.setSpeechRate(0.8f);
+                    break;
+                case Constants.NORMAL:
+                    t.setSpeechRate(1);
+                    break;
+                default:
+                    Log.e(Constants.TAG, "異常廣播");
+            }
         }
     };
 
+    // Constructor
     public ListenService() {
         parser = new Parser();
         parser.readFromFile();
@@ -47,36 +62,69 @@ public class ListenService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        registerReceiver(listenReceiver, new IntentFilter(Constants.LISTEN_FILTER));
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                int size = parser.getNumberOfWord();
+        loadTTSEngine();                                                                            // Load the TTS engine
+        registerReceiver(listenReceiver, new IntentFilter(Constants.LISTEN_FILTER));                // build receiver to get command
 
-                // Determine the direction
-                boolean reverse = (Math.random() > 0.5 ? true : false);
-                if (reverse) {
-                    for (int i = 0; i < size && stopFlag == true; i++)
-                        speakByIndex(i);
-                } else {
-                    for (int i = size - 1; i > 0 && stopFlag == true; i--)
-                        speakByIndex(i);
-                }
-            }
-        }.start();
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    // Implement loading the TTS engine
+    public void loadTTSEngine() {
+        Intent checkTTSIntent = new Intent();
+        checkTTSIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+        startActivityForResult(0, 1, checkTTSIntent);
+    }
+
+    // Examine if the engine has been install
+    private void startActivityForResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 0) {
+            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                t = new TextToSpeech(this, (TextToSpeech.OnInitListener) this);
+            } else {
+                Intent installTTSIntent = new Intent();
+                installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+                startActivity(installTTSIntent);
+            }
+        }
+    }
+
+    @Override
+    public void onInit(int status) {
+        if (status == TextToSpeech.SUCCESS) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            new Thread() {
+                @Override
+                public void run() {
+                    super.run();
+                    int size = parser.getNumberOfWord();
+
+                    // Determine the direction
+                    boolean reverse = (Math.random() > 0.5 ? true : false);
+                    boolean randomStart = (Math.random() > 0.5 ? true : false);                     // 1/2 pr to shuffle the start position
+                    if (reverse) {
+                        for (int i = (randomStart ? 0 : (int) (Math.random() * (size - 1))); i < size && stopFlag == true; i++)
+                            speakByIndex(i);
+                    } else {
+                        for (int i = (randomStart ? size - 1 : (int) (Math.random() * (size - 1))); i > 0 && stopFlag == true; i--)
+                            speakByIndex(i);
+                    }
+                }
+            }.start();
+        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        ListenActivity.t.stop();
-        ListenActivity.t.shutdown();
+        t.stop();
+        t.shutdown();
         unregisterReceiver(listenReceiver);
     }
 
-    @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -88,30 +136,21 @@ public class ListenService extends Service {
         if (i % 5 == 0) {
             switch ((i / 5) % 3) {
                 case 0:
-                    ListenActivity.t.setLanguage(new Locale("en", "GB"));
+                    t.setLanguage(new Locale("en", "GB"));
                     break;
                 case 1:
-                    ListenActivity.t.setLanguage(new Locale("en", "US"));
+                    t.setLanguage(new Locale("en", "US"));
                     break;
                 case 2:
-                    ListenActivity.t.setLanguage(new Locale("en", "AS"));
+                    t.setLanguage(new Locale("en", "AS"));
+                    break;
+                default:
+                    Log.e(Constants.TAG, "異常口音");
             }
         }
 
         // Speak the word
-        ListenActivity.t.speak(parser.getEn_Read(i), TextToSpeech.QUEUE_ADD, null);
-
-        // Send the word to show
-        Intent intent = new Intent();
-        intent.setAction(Constants.LISTEN_FILTER);
-        Bundle bundle = new Bundle();
-        bundle.putInt(Constants.DIRKEY, Constants.S2A);
-        intent.putExtra(Constants.DIR, bundle);
-        Bundle bundle1 = new Bundle();
-        bundle1.putString(Constants.TXTKEY, parser.getCh_Read(i));
-        intent.putExtra(Constants.TXT, bundle1);
-        sendBroadcast(intent);
-
+        t.speak(parser.getEn_Read(i), TextToSpeech.QUEUE_ADD, null);
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
