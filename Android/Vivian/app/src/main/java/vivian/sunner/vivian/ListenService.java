@@ -8,14 +8,17 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
 
+import java.util.HashMap;
 import java.util.Locale;
 
 public class ListenService extends Service implements TextToSpeech.OnInitListener {
     static Parser parser;
     public boolean stopFlag = true;                                                                 // The flag to stop the TTS
     public static TextToSpeech t;
+    static HashMap<String, String> map = new HashMap<String, String>();
 
     // Broadcast Receiver implementation
     public BroadcastReceiver listenReceiver = new BroadcastReceiver() {
@@ -91,6 +94,27 @@ public class ListenService extends Service implements TextToSpeech.OnInitListene
     @Override
     public void onInit(int status) {
         if (status == TextToSpeech.SUCCESS) {
+            t.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                @Override
+                public void onStart(String utteranceId) {
+                    // TODO Auto-generated method stub
+                    Log.v(Constants.TAG, "TTS start, ID: " + utteranceId);
+                }
+
+
+                @Override
+                public void onDone(String utteranceId) {
+                    //do some work here
+                    Log.v(Constants.TAG, "TTS done, ID: " + utteranceId);
+                }
+
+                @Override
+                public void onError(String utteranceId) {
+                    // not implement
+                }
+            });
+            map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "UniqueID");
+
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -150,9 +174,9 @@ public class ListenService extends Service implements TextToSpeech.OnInitListene
         }
 
         // Speak the word
-        t.speak(parser.getEn_Read(i), TextToSpeech.QUEUE_ADD, null);
         try {
-            Thread.sleep(3000);
+            Thread.sleep(100);
+            t.speak(parser.getEn_Read(i), TextToSpeech.QUEUE_ADD, map);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
