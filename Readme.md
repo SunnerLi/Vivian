@@ -1,3 +1,4 @@
+### This project is still maintained, but there's a new project that can give the greater experience for you. See the [Ivy](https://github.com/SunnerLi/Ivy)      
 # Vivian    
 A simple telegram bot that can help you remember the English vocabulary.    
       
